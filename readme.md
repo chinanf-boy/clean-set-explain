@@ -63,8 +63,21 @@ console.log(next.d === current.d); // true
 
 ---
 
-<!-- START doctoc -->
-<!-- END doctoc -->
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+
+- [package.json](#packagejson)
+- [index.js](#indexjs)
+  - [疑问copy](#%E7%96%91%E9%97%AEcopy)
+    - [两次 copy ?](#%E4%B8%A4%E6%AC%A1-copy-)
+    - [copy的不同](#copy%E7%9A%84%E4%B8%8D%E5%90%8C)
+- [⚠️ 警告](#-%E8%AD%A6%E5%91%8A)
+  - [隐形地址传递](#%E9%9A%90%E5%BD%A2%E5%9C%B0%E5%9D%80%E4%BC%A0%E9%80%92)
+- [为什么要这样](#%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E8%BF%99%E6%A0%B7)
+  - [基准](#%E5%9F%BA%E5%87%86)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ---
 
@@ -106,7 +119,7 @@ export default function(source, keys, update) {
   }
 
   // 因为 最后一层 的 顶层地址, 并没有换, 所以对 last[keys[i]] 的操作
-  // 也是对 next 相同 层级的操作
+  // 也是对 next 相同 层级的操作, 🧠
   return next;
 }
 
@@ -118,7 +131,32 @@ function copy(source) {
 
 ```
 
-1. 两次 copy ?
+0. 🧠 last 与 next
+
+先地址传递`last = next`, 在没到最后一层时, 
+
+``` js
+last = last[keys[i]] = copy(last[keys[i]])
+```
+
+地址传递后, `last` 与 `next` 相连,  其实可以看成 
+
+``` js
+last = next[keys[i]] = copy(next[keys[i]])
+```
+
+- **0.1** 可以看出, 是 把 next 的 子地址更换 > `next[keys[i]] = copy(next[keys[i]])`, 
+
+> 更换后, 与使用 `cleanSet(current)` current 的相同层级地址 脱离
+
+- **0.2** 同时 新的地址给到 last > `last = next[keys[i]]`
+
+> 所以对 `last` 的 子数据操作, 是会 同时操作 `next`
+
+
+### 疑问copy
+
+#### 两次 copy ?
 
 原本我以为 在第一次 copy 后, 
 
@@ -134,7 +172,7 @@ copy(last[keys[i]]);
 
 但是, 不行❌
 
-2. copy的不同
+#### copy的不同
 
 因为 `copy函数` 不同 `Object.assign`
 
@@ -153,6 +191,8 @@ function copy(source) {
 `to[i] = source[i];`
 
 ## ⚠️ 警告
+
+### 隐形地址传递
 
 从这里可以看出, javascripts 在地址上的,隐形传递
 
@@ -173,7 +213,7 @@ console.log('first.second.p === 1',first.second.p === 1)
 
 ## 为什么要这样
 
-我想速度方面, 能告诉你些东西
+我想在速度方面, 能告诉你些东西
 
 ### 基准
 
